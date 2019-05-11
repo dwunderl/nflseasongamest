@@ -662,7 +662,7 @@ function() {
     //    be mindful that the order of the divisions could be reversed
 
     // Testing of array find, and synchronous execution
-    // test git
+    // test git - from within vscode
 }
 ).run();
 console.log('back in main');
