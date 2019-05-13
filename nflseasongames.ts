@@ -564,10 +564,10 @@ function createDivisionalMatchups(nflseasons,curSeasonMatchups) {
 function writeGamesCsv(gameFile, seasonMatchups) {
    var gameWriteStream = fs.createWriteStream(gameFile);
 
-  writeGamesCsvDivionMatchups(gameWriteStream, seasonMatchups.divisionMatchups, ",division");
-  writeGamesCsvDivionMatchups(gameWriteStream, seasonMatchups.intraConferenceMatchups, "");
-  writeGamesCsvDivionMatchups(gameWriteStream, seasonMatchups.interConferenceMatchups, "");
-  writeGamesCsvDivionMatchups(gameWriteStream, seasonMatchups.intraConferenceFinishPlaceMatchups, "");
+  writeGamesCsvDivisionMatchups(gameWriteStream, seasonMatchups.divisionMatchups, ",division");
+  writeGamesCsvDivisionMatchups(gameWriteStream, seasonMatchups.intraConferenceMatchups, "");
+  writeGamesCsvDivisionMatchups(gameWriteStream, seasonMatchups.interConferenceMatchups, "");
+  writeGamesCsvDivisionMatchups(gameWriteStream, seasonMatchups.intraConferenceFinishPlaceMatchups, "");
 
   // finally - walk through the teams and create byes
 
@@ -579,7 +579,7 @@ function writeGamesCsv(gameFile, seasonMatchups) {
    gameWriteStream.close();
 }
 
-function writeGamesCsvDivionMatchups(gameWriteStream, dmus, param) {
+function writeGamesCsvDivisionMatchups(gameWriteStream, dmus, param) {
    for(var dmui=0; dmui < dmus.length; dmui++) {
       var dmu = dmus[dmui];
       var games = dmu.games;
