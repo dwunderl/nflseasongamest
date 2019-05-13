@@ -231,6 +231,7 @@ function finishPlaceHistoryMatchByGame(finishPlaceHistory) {
 
 var nflseasons = new Array();
 
+
 ///////////////////////////////////////////
 // nflgames array   ///////////////////////
 // Receives the created games for the next season based on the games from previous seasons
@@ -617,6 +618,46 @@ function createDivisionalMatchups(nflseasons,curSeasonMatchups) {
    }
 }
 
+function writeGamesCsv(gameFile, seasonMatchups) {
+   var gameWriteStream = fs.createWriteStream(gameFile);
+
+   /*
+   function nflSeasonMatchups (year) {
+    this.year = year;
+    this.divisionMatchups = new Array();
+    this.intraConferenceMatchups = new Array();
+    this.intraConferenceFinishPlaceMatchups = new Array();
+    this.interConferenceMatchups = new Array();
+}
+finally - walk through the teams and create byes
+   */
+
+
+   var dmus = seasonMatchups.divisionMatchups;   // array of nflDivisionMatchup
+   for(var dmui=0; dmui < dmus.length; dmui++) {
+      var dmu = dmus[dmui];
+
+      var games = dmu.games;
+      for (var gi = 0; gi < games.length; gi++) {
+         var game = games[gi];
+
+         gameWriteStream.write(game.homeTeam.name + "," + game.awayTeam.name + ",division" + "\n");
+      }
+   }
+
+   gameWriteStream.close();
+}
+/*
+var fast_csv = fastcsv.createWriteStream();
+var writeStream = fs.createWriteStream("outputfile.csv");
+fast_csv.pipe(writeStream);
+    this.homeTeam = homeTeam;
+    this.awayTeam = awayTeam;
+for(var i = 0; i < tempArray.length; i++){
+    fast_csv.write( [ tempArray[i]  ] );             //each element inside bracket
+    }
+fast_csv.end();
+*/
 ////////////////
 // main function
 ////////////////
@@ -653,6 +694,18 @@ function() {
     // walk through all of the division matchups withing curSeasonMatchups and write out to csv file
     // some comment changes to test git 
 
+    writeGamesCsv('nflgames2019.csv',curSeasonMatchups);
+
+/*
+var fast_csv = fastcsv.createWriteStream();
+var writeStream = fs.createWriteStream("outputfile.csv");
+fast_csv.pipe(writeStream);
+
+for(var i = 0; i < tempArray.length; i++){
+    fast_csv.write( [ tempArray[i]  ] );             //each element inside bracket
+    }
+fast_csv.end();
+*/
     // seasonMatchups('nflgames.csv','2018');
     //    read in games - create a season header, sort games into matchup collections
     //    Header will have a collection of nflDivisionalMatchup objects
