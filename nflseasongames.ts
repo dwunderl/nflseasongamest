@@ -250,7 +250,7 @@ class nflFinishPlaceMatchupHistory {
 
    getInfo() {
       return this.conference + " : " + this.division1 + " vs " + this.division2 + " : homeAwayHistory : " + 
-             this.homeAwayHistory[1] + this.homeAwayHistory[0];
+             this.homeAwayHistory[0] + this.homeAwayHistory[1] + " : homeAwayThisYear : " + this.homeAwayThisYear;
    }
 }
 
@@ -263,7 +263,9 @@ function finishPlaceHistoryMatchByGame(finishPlaceHistory) {
    let fphDivision1  : string = finishPlaceHistory.division1;
    let fphDivision2  : string = finishPlaceHistory.division2;
 
-   return (fphConference == team1.conference && fphDivision1 == team1.division && fphDivision2 == team2.division);
+   return (fphConference == team1.conference && fphConference == team2.conference) && 
+         ((fphDivision1 == team1.division && fphDivision2 == team2.division) ||
+          (fphDivision1 == team2.division && fphDivision2 == team1.division));
 }
 
 function finishPlaceHistoryMatchByDivisionMatchup(finishPlaceHistory : nflFinishPlaceMatchupHistory) {
@@ -481,23 +483,22 @@ function createIntraConferenceFinishPlaceMatchups(nflseasons : Array<nflSeasonMa
                else {
                   divFinishPlaceHistory.pattern = "-HR-RH-H";
                }
-               
-               let homeAwayHistory = divFinishPlaceHistory.homeAwayHistory;
-               if (homeTeam.division == divFinishPlaceHistory.division1) {
-                  divFinishPlaceHistory.homeAwayHistory = setCharAt(homeAwayHistory,historyStringIndex,'H');
-               }
-               else {
-                  divFinishPlaceHistory.homeAwayHistory = setCharAt(homeAwayHistory,historyStringIndex,'R');
-               }
+            }
+
+            if (homeTeam.division == divFinishPlaceHistory.division1) {
+                divFinishPlaceHistory.homeAwayHistory = setCharAt(divFinishPlaceHistory.homeAwayHistory, historyStringIndex,'H');
+            }
+            else {
+               divFinishPlaceHistory.homeAwayHistory = setCharAt(divFinishPlaceHistory.homeAwayHistory, historyStringIndex,'R');
             }
          }
       } 
    }
 
-   console.log("Nfl Finish Place Matchup History data");
+   //console.log("Nfl Finish Place Matchup History data");
    let fpdmh1 : nflFinishPlaceMatchupHistory;
    for (fpdmh1 of finishPlaceHistory) {
-      console.log(fpdmh1.getInfo());
+      //console.log(fpdmh1.getInfo());
    }
 
    // Npw we have the home away history for the past 2 years
@@ -519,6 +520,7 @@ function createIntraConferenceFinishPlaceMatchups(nflseasons : Array<nflSeasonMa
       }
 
       fpdmh.homeAwayThisYear = fpdmh.pattern[n+2];
+      console.log(fpdmh.getInfo());
 
       // could probably just go ahead and create the finish place matched games now
       // if the next home/away location is "-" that means the divisions don't do finish place matching in the current season
