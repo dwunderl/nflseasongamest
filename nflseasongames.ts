@@ -43,7 +43,7 @@ class nflTeam {
 // find function
 // passed "this" is a team name string
 function teamMatch(team) {
-  return team.name == this;
+   return team.name == this;
 }
 
 function processTeamCsvLine(data){
@@ -222,69 +222,6 @@ function seasonMatch(seasonMatchups) {
 
 // end nflSeasonMatchups //
 
-// nflFinishPlaceMatchupHistory
-//
-// homeAwayHistory[2] : for 2 years ago
-// homeAwayHistory[1] : for 1 years ago
-// homeAwayHistory[0] : for this year
-
-class nflFinishPlaceMatchupHistory {
-
-   conference : string;
-   division1 : string;
-   division2 : string;
-   homeAwayHistory : string;
-   homeAwayThisYear : string;
-   pattern : string;
-
-   constructor (conference : string, division1 : string, division2 : string) {
-      this.conference = conference;
-      this.division1 = division1;
-      this.division2 = division2;
-      this.homeAwayHistory = "--";  // [0] 2 years ago, [1] 1 year ago
-      this.homeAwayThisYear = "-";
-      this.pattern = "-HR-RH-";
-      // this.pattern = "-HR-RH-";
-      // this.pattern = "-RR-HH-";  // AFC-East or NFC-North is either of the 2 divisions
-   }
-
-   getInfo() {
-      return this.conference + " : " + this.division1 + " vs " + this.division2 + " : homeAwayHistory : " + 
-             this.homeAwayHistory[0] + this.homeAwayHistory[1] + " : homeAwayThisYear : " + this.homeAwayThisYear;
-   }
-}
-
-// find function
-// passed "this" is an nflGame
-function finishPlaceHistoryMatchByGame(finishPlaceHistory) {
-   let team1 : nflTeam = this.homeTeam;
-   let team2 : nflTeam = this.awayTeam;
-   let fphConference : string = finishPlaceHistory.conference;
-   let fphDivision1  : string = finishPlaceHistory.division1;
-   let fphDivision2  : string = finishPlaceHistory.division2;
-
-   return (fphConference == team1.conference && fphConference == team2.conference) && 
-         ((fphDivision1 == team1.division && fphDivision2 == team2.division) ||
-          (fphDivision1 == team2.division && fphDivision2 == team1.division));
-}
-
-function finishPlaceHistoryMatchByDivisionMatchup(finishPlaceHistory : nflFinishPlaceMatchupHistory) {
-   let dmuConference1 : string = this.conference1;
-   let dmuConference2 : string = this.conference2;
-   let dmuDivision1 : string = this.division1;
-   let dmuDivision2 : string = this.division2;
-
-   let fphConference : string = finishPlaceHistory.conference;
-   let fphDivision1 : string = finishPlaceHistory.division1;
-   let fphDivision2 : string = finishPlaceHistory.division2;
-
-   return (fphConference == dmuConference1 && fphConference == dmuConference2) && 
-         ((fphDivision1 == dmuDivision1 && fphDivision2 == dmuDivision2) ||
-          (fphDivision1 == dmuDivision2 && fphDivision2 == dmuDivision1));
-}
-// end nflFinishPlaceMatchupHistory //
-
-
 ///////////////////////////////////////////
 // nflseasons array ///////////////////////
 // Previous seasons games categorized into nflSeasonMatchups objects
@@ -331,8 +268,8 @@ function createPriorSeasonMatchups(gameFileName : string, year : number, nflseas
          	// intraConference matchup
           	let divisionMatchup : nflDivisionMatchup = priorSeasonMatchups.intraConferenceMatchups.find(divisionMatchUpMatchByGame,game);
          	if (divisionMatchup === undefined) {
-             divisionMatchup = new nflDivisionMatchup(homeTeam,awayTeam);
-             priorSeasonMatchups.intraConferenceMatchups.push(divisionMatchup);
+               divisionMatchup = new nflDivisionMatchup(homeTeam,awayTeam);
+               priorSeasonMatchups.intraConferenceMatchups.push(divisionMatchup);
         	}
           	divisionMatchup.games.push(game);
          }
@@ -349,7 +286,7 @@ function createPriorSeasonMatchups(gameFileName : string, year : number, nflseas
    }
 
    //console.log(priorSeasonMatchups.getInfo());
-   // post process the division matchups for 
+   // post process the division matchups for primary intraconference matchups vs finishplace intraconference
    let primaryIntraConferenceMatchups = new Array<nflDivisionMatchup>();
 
    //console.log("priorSeasonMatchups.intraConferenceMatchups");
@@ -359,6 +296,7 @@ function createPriorSeasonMatchups(gameFileName : string, year : number, nflseas
       //console.log(intraConfDivMU);
       if (intraConfDivMU.games.length == 4) {
          // this is a set of intra-conference placement matchups - move to that collection
+         // TBD: could analyze for Home vs Away - all 4 games should have the same home/away at div level
          priorSeasonMatchups.intraConferenceFinishPlaceMatchups.push(intraConfDivMU);
       }
       else {
@@ -425,11 +363,6 @@ function createIntraConferenceMatchups(nflseasons : Array<nflSeasonMatchups>, cu
 
 function createIntraConferenceFinishPlaceMatchups(nflseasons : Array<nflSeasonMatchups>, curSeasonMatchups : nflSeasonMatchups) {
 
-   // draw history from previous 2 years
-   // build a collection of objects (nflFinishPlaceMatchupHistory) for each divisional matchup
-   // populate the nflFinishPlaceMatchupHistory object with last 2 year home/away history 
-   // and determine the home away pattern based on the 2 divisions playing each other
-   // 
    // First copy intra conference finish place matchups from 3 years ago into this years instance
    // because the division matchups will repeat - even though the team match ups will vary
    // because of finish place differences
@@ -441,97 +374,44 @@ function createIntraConferenceFinishPlaceMatchups(nflseasons : Array<nflSeasonMa
       throw new Error("ERROR: createIntraConferenceFinishPlaceMatchups: failed to find priorSeasonMatchups for year: " + priorSeasonYear);
    }
 
+   // This years finish place division matchups are same as 3 years ago (in priorSeasonMatchups)
+   // Copy finish place division matchups from 3 years ago
    curSeasonMatchups.intraConferenceFinishPlaceMatchups = copy(priorSeasonMatchups.intraConferenceFinishPlaceMatchups);
+ 
+   // There are 8 intraConference Finish Place division matchups (4 for each conference)
+   // For each intraConference Finish Place division Matchup (e.g. AFC West vs AFC East)
+   // Analyze the games (which are from 3 years ago)
+   // Swap the home team from that previous 3 year matchup
+   // Check the first game (from 3 years ago)
+   // Make the away team division1 from the first game (to become cur year home team)
+   // Make the home team division2 from the first game (to become cur year away team)
+   // continue on to the next intraConference Finish Place division Matchup
 
-   let finishPlaceHistory = new Array<nflFinishPlaceMatchupHistory>();
+   // then can clear out the old games 
+   // proceed to find the division matchup teams and sort the team finishes
+   // and then create the games so that division1 is home and division2 is away
+
    let curYear = curSeasonMatchups.year;
 
-   // go back 2 years to capture the most recent home/away history for the ...
+   let icfpms = curSeasonMatchups.intraConferenceFinishPlaceMatchups;  // 8 total matchups - I think 4 matchups - check
+   let icfpm : nflDivisionMatchup;
+   for (icfpm of icfpms) {
+      let icfpGame : nflGame;
+      for (icfpGame of icfpm.games) {
+         let homeTeam : nflTeam = icfpGame.homeTeam;
+         let awayTeam : nflTeam = icfpGame.awayTeam;
 
-   for (let priorYear : number = curYear-2; priorYear < curYear; priorYear++) {
-      let priorSeasonMatchups2 : nflSeasonMatchups = nflseasons.find(seasonMatch,priorYear);
-      if (priorSeasonMatchups2 === undefined) {
-         throw new Error("ERROR: createIntraConferenceFinishPlaceMatchups: failed to find priorSeasonMatchups for year: " + priorYear);
+         // swap home division and away division from the 3 years ago
+         icfpm.division1 = awayTeam.division; 
+         icfpm.division2 = homeTeam.division;
+         break;    // done swapping home/away - now create new games
       }
+      // clear the games array from the old historical games
+      // we'll be adding new games with last seasons finish places and swapped home and away
 
-      let icfpms = priorSeasonMatchups2.intraConferenceFinishPlaceMatchups;  // 8 total matchups - I think 4 matchups - check
-      let icfpm : nflDivisionMatchup;
-      for (icfpm of icfpms) {
-         let icfpGame : nflGame;
-         for (icfpGame of icfpm.games) {
-            let homeTeam : nflTeam = icfpGame.homeTeam;
-            let awayTeam : nflTeam = icfpGame.awayTeam;
-            // determine if these divisions exist in the history collection
-            // if not create a new history object
-
-            // put home away history into the proper history slot
-            let historyStringIndex : number = 2 - (curYear - priorYear);     // 2-(2019 -2017) = 0,   2-(2019 - 2018) = 1
-
-            // find history object or create it if it doesn't exist
-
-            let divFinishPlaceHistory : nflFinishPlaceMatchupHistory = finishPlaceHistory.find(finishPlaceHistoryMatchByGame, icfpGame);
-            if (divFinishPlaceHistory === undefined) {
-               divFinishPlaceHistory = new nflFinishPlaceMatchupHistory(homeTeam.conference,homeTeam.division,awayTeam.division);
-               finishPlaceHistory.push(divFinishPlaceHistory);
-               // set the appropriate home away history pattern
-               if (homeTeam.conference === "afc" && homeTeam.division === "east"  ||
-                   homeTeam.conference === "nfc" && homeTeam.division === "north" ||
-                   awayTeam.conference === "afc" && awayTeam.division === "east"  ||
-                   awayTeam.conference === "nfc" && awayTeam.division === "north") {
-                  divFinishPlaceHistory.pattern = "-RR-HH-R";
-               }
-               else {
-                  divFinishPlaceHistory.pattern = "-HR-RH-H";
-               }
-            }
-
-            if (homeTeam.division == divFinishPlaceHistory.division1) {
-                divFinishPlaceHistory.homeAwayHistory = setCharAt(divFinishPlaceHistory.homeAwayHistory, historyStringIndex,'H');
-            }
-            else {
-               divFinishPlaceHistory.homeAwayHistory = setCharAt(divFinishPlaceHistory.homeAwayHistory, historyStringIndex,'R');
-            }
-         }
-      } 
-   }
-
-   //console.log("Nfl Finish Place Matchup History data");
-   let fpdmh1 : nflFinishPlaceMatchupHistory;
-   for (fpdmh1 of finishPlaceHistory) {
-      //console.log(fpdmh1.getInfo());
-   }
-
-   // Npw we have the home away history for the past 2 years
-   // Now determine the next home/away location in the pattern for each divisional matchup in the collection
-   // and create the games between the 2 divisions
-
-   let fpdm : nflDivisionMatchup;
-   for (fpdm of curSeasonMatchups.intraConferenceFinishPlaceMatchups) {
-      let fpdmh : nflFinishPlaceMatchupHistory = finishPlaceHistory.find(finishPlaceHistoryMatchByDivisionMatchup,fpdm);
-      if (fpdmh === undefined) {
-         throw new Error("ERROR: createIntraConferenceFinishPlaceMatchups: failed to find finishPlaceHistory for finish place div matchup: " 
-                         + fpdm.getInfo());
-      }
-
-      let n : number = fpdmh.pattern.indexOf(fpdmh.homeAwayHistory);
-
-      if (n == -1) {
-         throw new Error("ERROR: createIntraConferenceFinishPlaceMatchups: failed to find homeAwayHistory: " + fpdmh.homeAwayHistory + ", in pattern: " + fpdmh.pattern);
-      }
-
-      fpdmh.homeAwayThisYear = fpdmh.pattern[n+2];
-      console.log(fpdmh.getInfo());
-
-      // could probably just go ahead and create the finish place matched games now
-      // if the next home/away location is "-" that means the divisions don't do finish place matching in the current season
-
-      if (fpdmh.homeAwayThisYear == "-") {
-         continue;
-      }
-   
-      fpdm.games = [];   // clear the games array from the old historical games - we'll be adding new games according to the pattern
-
-      let divPlacementTeams : Array<nflTeam> = teams.filter(finalPlacementTeamFilter, fpdmh);
+      icfpm.games = [];  
+      
+      let divPlacementTeams : Array<nflTeam> = teams.filter(finalPlacementTeamFilter, icfpm);
       divPlacementTeams.sort(finalPlacementTeamSort);
 
       let gameCount : number = divPlacementTeams.length/2;
@@ -541,22 +421,23 @@ function createIntraConferenceFinishPlaceMatchups(nflseasons : Array<nflSeasonMa
          let team2 : nflTeam = divPlacementTeams[gi*2 + 1];
 
          let game : nflGame;
-         if (fpdmh.homeAwayThisYear.toLowerCase() == 'h') {
+         if (team1.division == icfpm.division1) {
             game = new nflGame(team1.name, team2.name);
          }
          else {
             game = new nflGame(team2.name, team1.name);
          }
-         fpdm.games.push(game);
+         icfpm.games.push(game);
       }
-   }
+   } 
 }
 
 function finalPlacementTeamFilter(team : nflTeam) {
-   // this is nflFinishPlaceMatchupHistory
-   if (team.conference == this.conference && (team.division == this.division1 || team.division == this.division2)) {
+   // this is nflDivisionMatchup for a finish place matchup division
+   if (team.conference == this.conference1 && (team.division == this.division1 || team.division == this.division2)) {
       return true;
    }
+
    return false;
 }
 
@@ -570,7 +451,7 @@ function finalPlacementTeamSort(team1 : nflTeam, team2 : nflTeam) {
    else if (team1.division < team1.division) {
       return -1;
    }
-    
+   
    return 1;
 }
 
@@ -601,7 +482,6 @@ function createInterConferenceMatchups(nflseasons : Array<nflSeasonMatchups>, cu
          // swap home and away from 3 years ago
          icGame.homeTeam = awayTeam;
          icGame.awayTeam = homeTeam;
-         //console.log(icGame.getInfo());
       }
    }
 }
@@ -676,6 +556,7 @@ function() {
     // Load history of past 4 seasons to support this years game matchups
     // place games into their proper categories: divisional, intraconference, interconference, intraConference finish place
 
+    createPriorSeasonMatchups('games2019.csv',2019,nflseasons);  // support final placement, divisional
     createPriorSeasonMatchups('games2018.csv',2018,nflseasons);  // support final placement, divisional
     createPriorSeasonMatchups('games2017.csv',2017,nflseasons);  // support final placement
     createPriorSeasonMatchups('games2016.csv',2016,nflseasons);  // support intraconference
@@ -685,7 +566,7 @@ function() {
     // Walk through games for this season and assign into divisional matchup collections
     // under the season header
 
-    let curSeasonMatchups : nflSeasonMatchups = new nflSeasonMatchups(2019);
+    let curSeasonMatchups : nflSeasonMatchups = new nflSeasonMatchups(2020);
     createDivisionalMatchups(nflseasons,curSeasonMatchups);
     createIntraConferenceMatchups(nflseasons,curSeasonMatchups);
     createInterConferenceMatchups(nflseasons,curSeasonMatchups);
@@ -700,10 +581,8 @@ function() {
     // walk through all of the division matchups withing curSeasonMatchups and write out to csv file
     // some comment changes to test git 
 
-    writeGamesCsv('nflgames2019.csv',curSeasonMatchups);
+    writeGamesCsv('nflgames2020.csv',curSeasonMatchups);
 
 }
 ).run();
 //console.log('back in main');
-
-
