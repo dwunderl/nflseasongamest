@@ -3,6 +3,7 @@ import csv = require("fast-csv");
 import Sync = require("Sync");
 import Fiber = require("fibers");
 
+let curYear : number = 0;
 let numGames : number = 0;
 let numTeams : number = 0;
 let teams = new Array<nflTeam>();
@@ -391,8 +392,6 @@ function createIntraConferenceFinishPlaceMatchups(nflseasons : Array<nflSeasonMa
    // proceed to find the division matchup teams and sort the team finishes
    // and then create the games so that division1 is home and division2 is away
 
-   let curYear = curSeasonMatchups.year;
-
    let icfpms = curSeasonMatchups.intraConferenceFinishPlaceMatchups;  // 8 total matchups - I think 4 matchups - check
    let icfpm : nflDivisionMatchup;
    for (icfpm of icfpms) {
@@ -541,14 +540,24 @@ function writeGamesCsvDivisionMatchups(gameWriteStream : fs.WriteStream, dmus : 
       }
    }
 }
-
+   
 ////////////////
 // main function
 ////////////////
 Fiber(
 function() {
     //console.log('wait... ' + new Date);
-    fs.createReadStream('nflteams.csv').pipe(csv())
+    let myArgs : Array<string> = process.argv.slice(2);
+    console.log('myArgs: ', myArgs);
+
+    if (myArgs.length === 0) {
+      throw new Error("ERROR: main: no arg for the year: ");
+    }
+
+    curYear = Number(myArgs[0]);
+
+    let teamsCurYearFname : string = "nflteams" + String(curYear) + ".csv";
+    fs.createReadStream(teamsCurYearFname).pipe(csv())
                                    .on('data',processTeamCsvLine)
                                    .on('end',endTeamsCsvFile);
     sleep(100);
@@ -556,17 +565,20 @@ function() {
     // Load history of past 4 seasons to support this years game matchups
     // place games into their proper categories: divisional, intraconference, interconference, intraConference finish place
 
-    createPriorSeasonMatchups('games2019.csv',2019,nflseasons);  // support final placement, divisional
-    createPriorSeasonMatchups('games2018.csv',2018,nflseasons);  // support final placement, divisional
-    createPriorSeasonMatchups('games2017.csv',2017,nflseasons);  // support final placement
-    createPriorSeasonMatchups('games2016.csv',2016,nflseasons);  // support intraconference
-    createPriorSeasonMatchups('games2015.csv',2015,nflseasons);  // support interConference
+    let games1YearBackFname : string = "games" + String(curYear-1) + ".csv";
+    let games2YearsBackFname : string = "games" + String(curYear-2) + ".csv";
+    let games3YearsBackFname : string = "games" + String(curYear-3) + ".csv";
+    let games4YearsBackFname : string = "games" + String(curYear-4) + ".csv";
+    createPriorSeasonMatchups(games1YearBackFname,curYear-1,nflseasons);  // support final placement, divisional
+    createPriorSeasonMatchups(games2YearsBackFname,curYear-2,nflseasons);  // support final placement, divisional
+    createPriorSeasonMatchups(games3YearsBackFname,curYear-3,nflseasons);  // support final placement
+    createPriorSeasonMatchups(games4YearsBackFname,curYear-4,nflseasons);  // support intraconference
 
 
     // Walk through games for this season and assign into divisional matchup collections
     // under the season header
 
-    let curSeasonMatchups : nflSeasonMatchups = new nflSeasonMatchups(2020);
+    let curSeasonMatchups : nflSeasonMatchups = new nflSeasonMatchups(curYear);
     createDivisionalMatchups(nflseasons,curSeasonMatchups);
     createIntraConferenceMatchups(nflseasons,curSeasonMatchups);
     createInterConferenceMatchups(nflseasons,curSeasonMatchups);
@@ -581,7 +593,8 @@ function() {
     // walk through all of the division matchups withing curSeasonMatchups and write out to csv file
     // some comment changes to test git 
 
-    writeGamesCsv('nflgames2020.csv',curSeasonMatchups);
+    let curYearGamesFileName : string = "nflgames" + String(curYear) + ".csv";
+    writeGamesCsv(curYearGamesFileName,curSeasonMatchups);
 
 }
 ).run();
